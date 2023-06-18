@@ -1,0 +1,85 @@
+const { ApolloServer, gql } = require("apollo-server");
+const { buildSubgraphSchema } = require("@apollo/federation");
+
+const data = {
+  orders: [
+    {
+      id: "a order id",
+      createdBy: "a user id",
+      items: [
+        {
+          bookId: "a book id",
+          quantity: 10,
+          price: 100,
+        },
+        {
+          bookId: "b book id",
+          quantity: 5,
+          price: 45,
+        },
+      ],
+    },
+  ],
+};
+
+const typeDefs = gql`
+  type OrderItem {
+    bookId: String!
+    quantity: Int!
+    price: Int!
+  }
+
+  type Order @key(fields: "id") {
+    id: ID!
+    totalPrice: Int!
+    totalQuantity: Int!
+    createdBy: String!
+    items: [OrderItem!]!
+  }
+
+  extend type Query {
+    orders: [Order!]!
+    order(id: ID!): Order!
+  }
+`;
+
+const resolvers = {
+  Query: {
+    order: (_, { id }) => {
+      return data.orders.find((order) => order.id === id);
+    },
+    orders: () => {
+      return data.orders;
+    },
+  },
+  Order: {
+    __resolveReference: (ref) => {
+      const { id } = ref;
+      return data.orders.find((order) => order.id === id);
+    },
+    totalPrice: (parent) => {
+      return parent.items.reduce((acc, item) => {
+        return acc + item.quantity * item.price;
+      }, 0);
+    },
+
+    totalQuantity: (parent) => {
+      return parent.items.reduce((acc, item) => {
+        return acc + item.quantity;
+      }, 0);
+    },
+  },
+};
+
+const server = new ApolloServer({
+  schema: buildSubgraphSchema([
+    {
+      typeDefs,
+      resolvers,
+    },
+  ]),
+});
+
+server.listen(4003).then(({ url }) => {
+  console.log(`Order Service running at ${url}`);
+});
