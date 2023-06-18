@@ -64,7 +64,7 @@ const resolvers = {
   },
   OrderItem: {
     book: (orderItem) => {
-      // tell book service resolve correct user data
+      // tell book service resolve correct book data
       return {
         __typename: "Book",
         id: orderItem.bookId,
