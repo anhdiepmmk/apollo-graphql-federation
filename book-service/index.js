@@ -31,21 +31,12 @@ const typeDefs = gql`
     description: String
     price: Int!
     createdBy: String!
+    createdUser: User!
   }
 
   extend type User @key(fields: "id") {
     id: ID! @external
     books: [Book!]!
-  }
-
-  extend type Order @key(fields: "id items { bookId }") {
-    id: ID! @external
-    items: [OrderItem!]! @external
-  }
-
-  extend type OrderItem {
-    bookId: String!
-    book: Book!
   }
 
   extend type Query {
@@ -75,11 +66,12 @@ const resolvers = {
       const { id } = ref;
       return data.books.find((book) => book.id === id);
     },
-  },
-  OrderItem: {
-    book: (parent) => {
-      const { bookId } = parent;
-      return data.books.find((book) => book.id === bookId);
+    createdUser: (book) => {
+      // this tell user service resolve correct user data
+      return {
+        __typename: "User",
+        id: book.createdBy,
+      };
     },
   },
 };

@@ -25,8 +25,17 @@ const data = {
 const typeDefs = gql`
   type OrderItem {
     bookId: String!
+    book: Book!
     quantity: Int!
     price: Int!
+  }
+
+  extend type User @key(fields: "id") {
+    id: ID! @external
+  }
+
+  extend type Book @key(fields: "id") {
+    id: ID! @external
   }
 
   type Order @key(fields: "id") {
@@ -34,6 +43,7 @@ const typeDefs = gql`
     totalPrice: Int!
     totalQuantity: Int!
     createdBy: String!
+    createdUser: User!
     items: [OrderItem!]!
   }
 
@@ -52,10 +62,27 @@ const resolvers = {
       return data.orders;
     },
   },
+  OrderItem: {
+    book: (orderItem) => {
+      // tell book service resolve correct user data
+      return {
+        __typename: "Book",
+        id: orderItem.bookId,
+      };
+    },
+  },
   Order: {
     __resolveReference: (ref) => {
+      console.log("order resolve reference", ref);
       const { id } = ref;
       return data.orders.find((order) => order.id === id);
+    },
+    createdUser: (order) => {
+      // tell user service resolve correct user data
+      return {
+        __typename: "User",
+        id: order.createdBy,
+      };
     },
     totalPrice: (parent) => {
       return parent.items.reduce((acc, item) => {

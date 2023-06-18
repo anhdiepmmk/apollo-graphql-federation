@@ -37,18 +37,6 @@ const typeDefs = gql`
     user(id: ID!): User
     users: [User]
   }
-
-  extend type Book @key(fields: "id createdBy") {
-    id: ID! @external
-    createdBy: String! @external
-    createdUser: User
-  }
-
-  extend type Order @key(fields: "id createdBy") {
-    id: ID! @external
-    createdBy: String! @external
-    createdUser: User
-  }
 `;
 
 const resolvers = {
@@ -65,16 +53,6 @@ const resolvers = {
       console.log("user resolve reference", ref);
       const { id } = ref;
       return data.users.find((user) => user.id === id);
-    },
-  },
-  Book: {
-    createdUser: ({ createdBy }) => {
-      return data.users.find((user) => user.id === createdBy);
-    },
-  },
-  Order: {
-    createdUser: ({ createdBy }) => {
-      return data.users.find((user) => user.id === createdBy);
     },
   },
 };
